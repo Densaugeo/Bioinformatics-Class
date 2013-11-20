@@ -1,8 +1,6 @@
-var COMPLEMENTS = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'};
-
 // Reverse and complement DNA string
 function reverseComplement(string) {
-  var result = '', complements = COMPLEMENTS;
+  var result = '', complements = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'};
   
   // Step backwards through array for reverse iteration
   for(var i = string.length; i--;) {
@@ -98,22 +96,53 @@ function frequentWords(sequence, k) {
   return {frequency: highestFrequency, kmers: frequentKmers};
 }
 
-// Find most common kmer(s) in sequence, coutning occurences of a kmer with no more than d differences (rather than exact occurences)
-/*function frequentApproximateWords(sequence, k, d) {
-  var kmers = {}, frequentKmers = [], highestFrequency = 0, subsequence = '';
+var changeBase = {'A': {'T': 1, 'C': 2, 'G': 3},
+                  'T': {'C': 1, 'G': 2, 'A': 3},
+                  'C': {'G': 1, 'A': 2, 'T': 3},
+                  'G': {'A': 1, 'T': 2, 'C': 3}};
+
+// Find most common kmer(s) in sequence, counting occurences of a kmer with no more than d differences (rather than exact occurences)
+// If complements option is true, count kmers together with their complements
+function frequentApproximateWords(sequence, k, d, complements) {
+  if(d > 3) throw new Error('Sorry, I can only do d values of up to 3');
+  console.warn('This function is complicated and untested - use at your own (high) risk')
+  
+  var kmers = {}, frequentKmers = [], highestFrequency = 0, subsequence = '', nearSubsequece = '', frequency = 0;
   
   for(var i = 0, end = sequence.length - k; i <= end; ++i) {
     subsequence = sequence.substr(i, k);
     
+    // Make note of the subsequence, along with all similar subsequences
     kmers[subsequence] = (kmers[subsequence] || 0) + 1;
-    if(kmers[subsequence] === highestFrequency) {
-      frequentKmers.push(subsequence);
+    if(d >= 1) for(var i2 = 0; i2 < k; ++i2) for(var i3 in changeBase[subsequence[i2]]) {
+      nearSubsequence = subsequence.substring(0, i2) + i3 + subsequence.substring(i2 + 1);
+      kmers[nearSubsequence] = (kmers[nearSubsequence] || 0) + 1;
     }
-    if(kmers[subsequence] > highestFrequency) {
-      frequentKmers = [subsequence];
-      highestFrequency = kmers[subsequence];
+    if(d >= 2) for(var i2 = 0; i2 < k; ++i2) for(var i3 = i2 + 1; i3 < k; ++i3) {
+      for(var i4 in changeBase[subsequence[i2]]) for(var i5 in changeBase[subsequence[i3]]) {
+        nearSubsequence = subsequence.substring(0, i2) + i4 + subsequence.substring(i2 + 1, i3) + i5 + subsequence.substring(i3 + 1);
+        kmers[nearSubsequence] = (kmers[nearSubsequence] || 0) + 1;
+      }
+    }
+    if(d >= 3) for(var i2 = 0; i2 < k; ++i2) for(var i3 = i2 + 1; i3 < k; ++i3) for(var i4 = i3 + 1; i4 < k; ++i4) {
+      for(var i5 in changeBase[subsequence[i2]]) for(var i6 in changeBase[subsequence[i3]]) for(var i7 in changeBase[subsequence[i4]]) {
+        nearSubsequence = subsequence.substring(0, i2) + i5 + subsequence.substring(i2 + 1, i3) + i6 + subsequence.substring(i3 + 1, i4) + i7 + subsequence.substring(i4 + 1);
+        kmers[nearSubsequence] = (kmers[nearSubsequence] || 0) + 1;
+      }
+    }
+  }
+  
+  for(var i in kmers) {
+    frequency = kmers[i] + (complements ? kmers[reverseComplement(i)] : 0);
+    
+    if(frequency === highestFrequency) {
+      frequentKmers.push(i);
+    }
+    if(frequency > highestFrequency) {
+      frequentKmers = [i];
+      highestFrequency = frequency;
     }
   }
   
   return {frequency: highestFrequency, kmers: frequentKmers};
-}*/
+}
