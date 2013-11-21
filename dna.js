@@ -147,8 +147,10 @@ function frequentApproximateWords(sequence, k, d, complements) {
   return {frequency: highestFrequency, kmers: frequentKmers};
 }
 
+// Lookup table for converting DNA nucleotides to RNA
 var DNA_TO_RNA = {'A': 'A', 'T': 'U', 'C': 'C', 'G': 'G'};
 
+// Lookup table for converting RNA codons to one-letter amino acid codes
 var RNA_TO_AMINES = {
   AAA: 'K', AAU: 'N', AAC: 'N', AAG: 'K',
   AUA: 'I', AUU: 'I', AUC: 'I', AUG: 'M',
@@ -168,6 +170,7 @@ var RNA_TO_AMINES = {
   GGA: 'G', GGU: 'G', GGC: 'G', GGG: 'G'
 }
 
+// Lookup table for converting DNA codons to one-letter amino acid codes
 var DNA_TO_AMINES = {
   AAA: 'K', AAT: 'N', AAC: 'N', AAG: 'K',
   ATA: 'I', ATT: 'I', ATC: 'I', ATG: 'M',
@@ -187,6 +190,7 @@ var DNA_TO_AMINES = {
   GGA: 'G', GGT: 'G', GGC: 'G', GGG: 'G'
 }
 
+// Lookup table for converting one-letter amino acid codes to DNA codons
 var AMINES_TO_DNA = {
   K: ['AAA', 'AAG'],
   N: ['AAC', 'AAU'],
@@ -211,6 +215,7 @@ var AMINES_TO_DNA = {
   ' ': ['UAA', 'UAG', 'UGA']
 }
 
+// Converts a given DNA string to an amine string.  Assumes sequence begins with the first nucleotide given
 function dnaToAmines(sequence) {
   var result = '';
   
@@ -223,6 +228,7 @@ function dnaToAmines(sequence) {
   return result;
 }
 
+// Searches a DNA sequence for subsequences encoding the given peptide.  Also checks reverse complement
 function findPeptideInDna(sequence, peptide) {
   var results = [];
   var dnaLength = 3*peptide.length;
@@ -236,6 +242,75 @@ function findPeptideInDna(sequence, peptide) {
       results.push(reverseComplement(sequenceRC.substr(i, dnaLength)));
     }
   }
+  
+  return results;
+}
+
+// Lookup table for converting one- and three-letter amino acid codes to monoisotopic masses
+var AMINES_TO_MASSES = {
+  A:  71, Ala:  71,
+  R: 156, Arg: 156,
+  N: 114, Asn: 114,
+  D: 115, Asp: 115,
+  C: 103, Cys: 103,
+  E: 129, Glu: 129,
+  Q: 128, Gln: 128,
+  G:  57, Gly:  57,
+  H: 137, His: 137,
+  I: 113, Ile: 113,
+  L: 113, Leu: 113,
+  K: 128, Lys: 128,
+  M: 131, Met: 131,
+  F: 147, Phe: 147,
+  P:  97, Pro:  97,
+  S:  87, Ser:  87,
+  T: 101, Thr: 101,
+  W: 186, Trp: 186,
+  Y: 163, Tyr: 163,
+  V:  99, Val:  99
+}
+
+// Peptide string -> monoisotopic mass
+function peptideToMass(peptide) {
+  var result = 0;
+  
+  for(var i = 0, end = peptide.length; i < end; ++i) {
+    result += AMINES_TO_MASSES[peptide[i]];
+  }
+  
+  return result;
+}
+
+// Generate full set of possible subpeptides (including the empty and original peptides)
+function peptideToSubpeptides(peptide, cyclic) {
+  var results = ['', peptide];
+  
+  // Need double peptide string for handling cyclic peptides, and save the length
+  var length = peptide.length;
+  peptide += peptide;
+  
+  for(var i = 0; i < length; ++i) for(var j = 1, end = cyclic ? length : length - i; j < end; ++j) {
+    results.push(peptide.substr(i, j));
+  }
+  
+  return results;
+}
+
+// Generate a theoretical mass spec spectrum from the given peptide
+function peptideToSpectrum(peptide, cyclic) {
+  var results = peptideToSubpeptides(peptide, cyclic);
+  
+  for(var i = 0, length = results.length; i < length; ++i) {
+    results[i] = peptideToMass(results[i]);
+  }
+  
+  results.sort(function(a, b) {
+    if (a < b)
+      return -1;
+    if (a > b)
+      return 1;
+    return 0;
+  });
   
   return results;
 }
