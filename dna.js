@@ -146,3 +146,96 @@ function frequentApproximateWords(sequence, k, d, complements) {
   
   return {frequency: highestFrequency, kmers: frequentKmers};
 }
+
+var DNA_TO_RNA = {'A': 'A', 'T': 'U', 'C': 'C', 'G': 'G'};
+
+var RNA_TO_AMINES = {
+  AAA: 'K', AAU: 'N', AAC: 'N', AAG: 'K',
+  AUA: 'I', AUU: 'I', AUC: 'I', AUG: 'M',
+  ACA: 'T', ACU: 'T', ACC: 'T', ACG: 'T',
+  AGA: 'R', AGU: 'S', AGC: 'S', AGG: 'R',
+  UAA: ' ', UAU: 'Y', UAC: 'Y', UAG: ' ',
+  UUA: 'L', UUU: 'F', UUC: 'F', UUG: 'L',
+  UCA: 'S', UCU: 'S', UCC: 'S', UCG: 'S',
+  UGA: ' ', UGU: 'C', UGC: 'C', UGG: 'W',
+  CAA: 'Q', CAU: 'H', CAC: 'H', CAG: 'Q',
+  CUA: 'L', CUU: 'L', CUC: 'L', CUG: 'L',
+  CCA: 'P', CCU: 'P', CCC: 'P', CCG: 'P',
+  CGA: 'R', CGU: 'R', CGC: 'R', CGG: 'R',
+  GAA: 'E', GAU: 'D', GAC: 'D', GAG: 'E',
+  GUA: 'V', GUU: 'V', GUC: 'V', GUG: 'V',
+  GCA: 'A', GCU: 'A', GCC: 'A', GCG: 'A',
+  GGA: 'G', GGU: 'G', GGC: 'G', GGG: 'G'
+}
+
+var DNA_TO_AMINES = {
+  AAA: 'K', AAT: 'N', AAC: 'N', AAG: 'K',
+  ATA: 'I', ATT: 'I', ATC: 'I', ATG: 'M',
+  ACA: 'T', ACT: 'T', ACC: 'T', ACG: 'T',
+  AGA: 'R', AGT: 'S', AGC: 'S', AGG: 'R',
+  TAA: ' ', TAT: 'Y', TAC: 'Y', TAG: ' ',
+  TTA: 'L', TTT: 'F', TTC: 'F', TTG: 'L',
+  TCA: 'S', TCT: 'S', TCC: 'S', TCG: 'S',
+  TGA: ' ', TGT: 'C', TGC: 'C', TGG: 'W',
+  CAA: 'Q', CAT: 'H', CAC: 'H', CAG: 'Q',
+  CTA: 'L', CTT: 'L', CTC: 'L', CTG: 'L',
+  CCA: 'P', CCT: 'P', CCC: 'P', CCG: 'P',
+  CGA: 'R', CGT: 'R', CGC: 'R', CGG: 'R',
+  GAA: 'E', GAT: 'D', GAC: 'D', GAG: 'E',
+  GTA: 'V', GTT: 'V', GTC: 'V', GTG: 'V',
+  GCA: 'A', GCT: 'A', GCC: 'A', GCG: 'A',
+  GGA: 'G', GGT: 'G', GGC: 'G', GGG: 'G'
+}
+
+var AMINES_TO_DNA = {
+  K: ['AAA', 'AAG'],
+  N: ['AAC', 'AAU'],
+  T: ['ACA', 'ACC', 'ACG', 'ACU'],
+  R: ['AGA', 'AGG', 'CGA', 'CGC', 'CGG', 'CGU'],
+  S: ['AGC', 'AGU', 'UCA', 'UCC', 'UCG', 'UCU'],
+  I: ['AUA', 'AUC', 'AUU'],
+  M: ['AUG'],
+  Q: ['CAA', 'CAG'],
+  H: ['CAC', 'CAU'],
+  P: ['CCA', 'CCC', 'CCG', 'CCU'],
+  L: ['CUA', 'CUC', 'CUG', 'CUU', 'UUA', 'UUG'],
+  E: ['GAA', 'GAG'],
+  D: ['GAC', 'GAU'],
+  A: ['GCA', 'GCC', 'GCG', 'GCU'],
+  G: ['GGA', 'GGC', 'GGG', 'GGU'],
+  V: ['GUA', 'GUC', 'GUG', 'GUU'],
+  Y: ['UAC', 'UAU'],
+  C: ['UGC', 'UGU'],
+  W: ['UGG'],
+  F: ['UUC', 'UUU'],
+  ' ': ['UAA', 'UAG', 'UGA']
+}
+
+function dnaToAmines(sequence) {
+  var result = '';
+  
+  for(var i = 0, end = Math.floor(sequence.length/3); i < end; ++i) {
+    result += DNA_TO_AMINES[sequence.substr(3*i, 3)];
+    
+    if(result[i] === ' ') return result.substring(0, i);
+  }
+  
+  return result;
+}
+
+function findPeptideInDna(sequence, peptide) {
+  var results = [];
+  var dnaLength = 3*peptide.length;
+  var sequenceRC = reverseComplement(sequence);
+  
+  for(var i = 0, end = sequence.length - dnaLength; i <= end; ++i) {
+    if(peptide === dnaToAmines(sequence.substr(i, dnaLength))) {
+      results.push(sequence.substr(i, dnaLength));
+    }
+    if(peptide === dnaToAmines(sequenceRC.substr(i, dnaLength))) {
+      results.push(reverseComplement(sequenceRC.substr(i, dnaLength)));
+    }
+  }
+  
+  return results;
+}
