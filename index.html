@@ -1,0 +1,19 @@
+<!DOCTYPE html5>
+<html>
+<head>
+<title>Bioinformatics library in JavaScript!</title>
+</head>
+
+<body>
+</body>
+
+<script type='text/javascript' src='node_modules/dna.js'></script>
+
+<script type='text/javascript'>
+var dna = DNA;
+for(var i in dna) window[i] = dna[i];
+
+console.log('Hello, welcome to dna.js\' browser console.  The library is placed in the \'DNA\' object in browser environments, and also assigned to \'dna\' on this page.  All of its properties can be referenced directly by name from here.');
+</script>
+
+</html>
